@@ -39,6 +39,488 @@
           </shadow>
         </value>
         <next>
+          <block type="variables_set" id="init_variables">
+        <field name="VAR">volatility_100_symbol</field>
+        <value name="VALUE">
+          <block type="text" id="vol100_symbol">
+            <field name="TEXT">1HZ100V</field>
+          </block>
+        </value>
+        <next>
+          <block type="variables_set" id="set_stake">
+            <field name="VAR">stake_amount</field>
+            <value name="VALUE">
+              <block type="math_number" id="stake_value">
+                <field name="NUM">1</field>
+              </block>
+            </value>
+            <next>
+              <block type="variables_set" id="set_profit">
+                <field name="VAR">profit_target</field>
+                <value name="VALUE">
+                  <block type="math_number" id="profit_value">
+                    <field name="NUM">10</field>
+                  </block>
+                </value>
+                <next>
+                  <block type="variables_set" id="set_loss">
+                    <field name="VAR">loss_limit</field>
+                    <value name="VALUE">
+                      <block type="math_number" id="loss_value">
+                        <field name="NUM">10</field>
+                      </block>
+                    </value>
+                    <next>
+                      <block type="procedures_callnoreturn" id="start_monitoring">
+                        <mutation name="monitor_entry_points"></mutation>
+                      </block>
+                    </next>
+                  </block>
+                </next>
+              </block>
+            </next>
+          </block>
+        </next>
+      </block>
+    </statement>
+  </block>
+
+  <block type="procedures_defnoreturn" id="monitor_entry_points">
+    <field name="NAME">monitor_entry_points</field>
+    <statement name="STACK">
+      <block type="controls_whileUntil" id="main_loop">
+        <field name="MODE">WHILE</field>
+        <value name="BOOL">
+          <block type="logic_boolean" id="true_condition">
+            <field name="BOOL">TRUE</field>
+          </block>
+        </value>
+        <statement name="DO">
+          <block type="procedures_callnoreturn" id="check_entry">
+            <mutation name="detect_entry_signal"></mutation>
+            <next>
+              <block type="controls_if" id="entry_check">
+                <value name="IF0">
+                  <block type="variables_get" id="entry_status">
+                    <field name="VAR">entry_detected</field>
+                  </block>
+                </value>
+                <statement name="DO0">
+                  <block type="procedures_callnoreturn" id="execute_trade">
+                    <mutation name="place_digit_prediction"></mutation>
+                    <next>
+                      <block type="procedures_callnoreturn" id="manage_position">
+                        <mutation name="profit_management"></mutation>
+                      </block>
+                    </next>
+                  </block>
+                </statement>
+                <next>
+                  <block type="controls_flow_statements" id="wait_next">
+                    <field name="FLOW">BREAK</field>
+                  </block>
+                </next>
+              </block>
+            </next>
+          </block>
+        </statement>
+      </block>
+    </statement>
+  </block>
+
+  <block type="procedures_defnoreturn" id="detect_entry_signal">
+    <field name="NAME">detect_entry_signal</field>
+    <statement name="STACK">
+      <block type="variables_set" id="get_last_tick">
+        <field name="VAR">last_tick</field>
+        <value name="VALUE">
+          <block type="tick" id="current_tick">
+            <field name="TICKFIELD">last</field>
+          </block>
+        </value>
+        <next>
+          <block type="variables_set" id="extract_digit">
+            <field name="VAR">last_digit</field>
+            <value name="VALUE">
+              <block type="math_modulo" id="get_digit">
+                <value name="DIVIDEND">
+                  <block type="variables_get" id="tick_value">
+                    <field name="VAR">last_tick</field>
+                  </block>
+                </value>
+                <value name="DIVISOR">
+                  <block type="math_number" id="ten">
+                    <field name="NUM">10</field>
+                  </block>
+                </value>
+              </block>
+            </value>
+            <next>
+              <block type="procedures_callnoreturn" id="analyze_pattern">
+                <mutation name="pattern_analysis"></mutation>
+                <next>
+                  <block type="controls_if" id="signal_check">
+                    <value name="IF0">
+                      <block type="logic_operation" id="entry_condition">
+                        <field name="OP">AND</field>
+                        <value name="A">
+                          <block type="logic_compare" id="digit_range">
+                            <field name="OP">GTE</field>
+                            <value name="A">
+                              <block type="variables_get" id="last_digit_check">
+                                <field name="VAR">last_digit</field>
+                              </block>
+                            </value>
+                            <value name="B">
+                              <block type="math_number" id="min_digit">
+                                <field name="NUM">0</field>
+                              </block>
+                            </value>
+                          </block>
+                        </value>
+                        <value name="B">
+                          <block type="logic_compare" id="digit_max">
+                            <field name="OP">LTE</field>
+                            <value name="A">
+                              <block type="variables_get" id="last_digit_check2">
+                                <field name="VAR">last_digit</field>
+                              </block>
+                            </value>
+                            <value name="B">
+                              <block type="math_number" id="max_digit">
+                                <field name="NUM">9</field>
+                              </block>
+                            </value>
+                          </block>
+                        </value>
+                      </block>
+                    </value>
+                    <statement name="DO0">
+                      <block type="variables_set" id="set_entry_true">
+                        <field name="VAR">entry_detected</field>
+                        <value name="VALUE">
+                          <block type="logic_boolean" id="true_entry">
+                            <field name="BOOL">TRUE</field>
+                          </block>
+                        </value>
+                        <next>
+                          <block type="procedures_callnoreturn" id="predict_digit">
+                            <mutation name="calculate_prediction"></mutation>
+                          </block>
+                        </next>
+                      </block>
+                    </statement>
+                  </block>
+                </next>
+              </block>
+            </next>
+          </block>
+        </next>
+      </block>
+    </statement>
+  </block>
+
+  <block type="procedures_defnoreturn" id="pattern_analysis">
+    <field name="NAME">pattern_analysis</field>
+    <statement name="STACK">
+      <block type="variables_set" id="analyze_volatility">
+        <field name="VAR">volatility_pattern</field>
+        <value name="VALUE">
+          <block type="tick_analysis" id="vol_analysis">
+            <field name="ANALYZE_TYPE">volatility</field>
+            <field name="PERIOD">5</field>
+          </block>
+        </value>
+        <next>
+          <block type="variables_set" id="trend_check">
+            <field name="VAR">trend_direction</field>
+            <value name="VALUE">
+              <block type="tick_analysis" id="trend_analysis">
+                <field name="ANALYZE_TYPE">direction</field>
+                <field name="PERIOD">3</field>
+              </block>
+            </value>
+          </block>
+        </next>
+      </block>
+    </statement>
+  </block>
+
+  <block type="procedures_defnoreturn" id="calculate_prediction">
+    <field name="NAME">calculate_prediction</field>
+    <statement name="STACK">
+      <block type="variables_set" id="prediction_logic">
+        <field name="VAR">predicted_digit</field>
+        <value name="VALUE">
+          <block type="math_random_int" id="random_prediction">
+            <value name="FROM">
+              <block type="math_number" id="pred_min">
+                <field name="NUM">0</field>
+              </block>
+            </value>
+            <value name="TO">
+              <block type="math_number" id="pred_max">
+                <field name="NUM">9</field>
+              </block>
+            </value>
+          </block>
+        </value>
+        <next>
+          <block type="controls_if" id="smart_prediction">
+            <value name="IF0">
+              <block type="logic_compare" id="volatility_high">
+                <field name="OP">GT</field>
+                <value name="A">
+                  <block type="variables_get" id="vol_pattern">
+                    <field name="VAR">volatility_pattern</field>
+                  </block>
+                </value>
+                <value name="B">
+                  <block type="math_number" id="vol_threshold">
+                    <field name="NUM">0.5</field>
+                  </block>
+                </value>
+              </block>
+            </value>
+            <statement name="DO0">
+              <block type="variables_set" id="adjust_prediction">
+                <field name="VAR">predicted_digit</field>
+                <value name="VALUE">
+                  <block type="math_arithmetic" id="prediction_calc">
+                    <field name="OP">ADD</field>
+                    <value name="A">
+                      <block type="variables_get" id="last_digit_pred">
+                        <field name="VAR">last_digit</field>
+                      </block>
+                    </value>
+                    <value name="B">
+                      <block type="math_number" id="prediction_offset">
+                        <field name="NUM">1</field>
+                      </block>
+                    </value>
+                  </block>
+                </value>
+                <next>
+                  <block type="variables_set" id="normalize_prediction">
+                    <field name="VAR">predicted_digit</field>
+                    <value name="VALUE">
+                      <block type="math_modulo" id="normalize">
+                        <value name="DIVIDEND">
+                          <block type="variables_get" id="pred_digit">
+                            <field name="VAR">predicted_digit</field>
+                          </block>
+                        </value>
+                        <value name="DIVISOR">
+                          <block type="math_number" id="ten_mod">
+                            <field name="NUM">10</field>
+                          </block>
+                        </value>
+                      </block>
+                    </value>
+                  </block>
+                </next>
+              </block>
+            </statement>
+          </block>
+        </next>
+      </block>
+    </statement>
+  </block>
+
+  <block type="procedures_defnoreturn" id="place_digit_prediction">
+    <field name="NAME">place_digit_prediction</field>
+    <statement name="STACK">
+      <block type="purchase" id="buy_contract">
+        <field name="PURCHASE_TYPE">DIGITDIFF</field>
+        <value name="PROPOSAL">
+          <block type="proposal" id="digit_proposal">
+            <field name="MARKET">synthetic_index</field>
+            <field name="SUBMARKET">continuous_indices</field>
+            <field name="SYMBOL">1HZ100V</field>
+            <field name="TRADETYPE">DIGITDIFF</field>
+            <field name="TYPE">DIGITDIFF</field>
+            <value name="DURATION">
+              <block type="math_number" id="duration_ticks">
+                <field name="NUM">1</field>
+              </block>
+            </value>
+            <value name="DURATIONUNIT">
+              <block type="text" id="duration_unit">
+                <field name="TEXT">t</field>
+              </block>
+            </value>
+            <value name="AMOUNT">
+              <block type="variables_get" id="stake_amt">
+                <field name="VAR">stake_amount</field>
+              </block>
+            </value>
+            <value name="PREDICTION">
+              <block type="variables_get" id="digit_prediction">
+                <field name="VAR">predicted_digit</field>
+              </block>
+            </value>
+          </block>
+        </value>
+        <next>
+          <block type="text_print" id="trade_log">
+            <value name="TEXT">
+              <block type="text_join" id="log_message">
+                <mutation items="3"></mutation>
+                <value name="ADD0">
+                  <block type="text" id="log_prefix">
+                    <field name="TEXT">Placed digit prediction: </field>
+                  </block>
+                </value>
+                <value name="ADD1">
+                  <block type="variables_get" id="pred_log">
+                    <field name="VAR">predicted_digit</field>
+                  </block>
+                </value>
+                <value name="ADD2">
+                  <block type="text" id="log_suffix">
+                    <field name="TEXT"> on Volatility 100</field>
+                  </block>
+                </value>
+              </block>
+            </value>
+          </block>
+        </next>
+      </block>
+    </statement>
+  </block>
+
+  <block type="procedures_defnoreturn" id="profit_management">
+    <field name="NAME">profit_management</field>
+    <statement name="STACK">
+      <block type="after_purchase" id="after_buy">
+        <statement name="RESTARTONERROR">
+          <block type="controls_if" id="profit_check">
+            <mutation else="1"></mutation>
+            <value name="IF0">
+              <block type="logic_compare" id="profit_condition">
+                <field name="OP">GTE</field>
+                <value name="A">
+                  <block type="total_profit" id="current_profit">
+                  </block>
+                </value>
+                <value name="B">
+                  <block type="variables_get" id="target_profit">
+                    <field name="VAR">profit_target</field>
+                  </block>
+                </value>
+              </block>
+            </value>
+            <statement name="DO0">
+              <block type="text_print" id="profit_achieved">
+                <value name="TEXT">
+                  <block type="text" id="profit_msg">
+                    <field name="TEXT">Profit target achieved! Stopping bot.</field>
+                  </block>
+                </value>
+                <next>
+                  <block type="procedures_callnoreturn" id="stop_bot">
+                    <mutation name="bot_stop"></mutation>
+                  </block>
+                </next>
+              </block>
+            </statement>
+            <statement name="ELSE">
+              <block type="controls_if" id="loss_check">
+                <value name="IF0">
+                  <block type="logic_compare" id="loss_condition">
+                    <field name="OP">LTE</field>
+                    <value name="A">
+                      <block type="total_profit" id="current_loss">
+                      </block>
+                    </value>
+                    <value name="B">
+                      <block type="math_arithmetic" id="negative_loss">
+                        <field name="OP">MULTIPLY</field>
+                        <value name="A">
+                          <block type="variables_get" id="loss_lmt">
+                            <field name="VAR">loss_limit</field>
+                          </block>
+                        </value>
+                        <value name="B">
+                          <block type="math_number" id="negative_one">
+                            <field name="NUM">-1</field>
+                          </block>
+                        </value>
+                      </block>
+                    </value>
+                  </block>
+                </value>
+                <statement name="DO0">
+                  <block type="text_print" id="loss_limit_hit">
+                    <value name="TEXT">
+                      <block type="text" id="loss_msg">
+                        <field name="TEXT">Loss limit reached! Stopping bot.</field>
+                      </block>
+                    </value>
+                    <next>
+                      <block type="procedures_callnoreturn" id="stop_bot_loss">
+                        <mutation name="bot_stop"></mutation>
+                      </block>
+                    </next>
+                  </block>
+                </statement>
+                <next>
+                  <block type="variables_set" id="reset_entry">
+                    <field name="VAR">entry_detected</field>
+                    <value name="VALUE">
+                      <block type="logic_boolean" id="false_entry">
+                        <field name="BOOL">FALSE</field>
+                      </block>
+                    </value>
+                  </block>
+                </next>
+              </block>
+            </statement>
+          </block>
+        </statement>
+      </block>
+    </statement>
+  </block>
+
+  <block type="procedures_defnoreturn" id="bot_stop">
+    <field name="NAME">bot_stop</field>
+    <statement name="STACK">
+      <block type="notify" id="final_notification">
+        <field name="NOTIFICATION_TYPE">success</field>
+        <value name="MESSAGE">
+          <block type="text_join" id="final_message">
+            <mutation items="2"></mutation>
+            <value name="ADD0">
+              <block type="text" id="final_prefix">
+                <field name="TEXT">Bot stopped. Total profit/loss: </field>
+              </block>
+            </value>
+            <value name="ADD1">
+              <block type="total_profit" id="final_profit">
+              </block>
+            </value>
+          </block>
+        </value>
+        <next>
+          <block type="controls_flow_statements" id="terminate">
+            <field name="FLOW">BREAK</field>
+          </block>
+        </next>
+      </block>
+    </statement>
+  </block>
+
+  <block type="on_strategy_open" id="strategy_start">
+    <statement name="STRATEGY_OPEN">
+      <block type="procedures_callnoreturn" id="init_strategy">
+        <mutation name="main_strategy"></mutation>
+      </block>
+    </statement>
+  </block>
+
+</xml>
+
+          
           <block type="variables_set" id="KpU:CDLdAJ32}ERR*25!">
             <field name="VAR" id="p.fWgj~v$WFPq)yU@!;d" variabletype="">prediction</field>
             <value name="VALUE">
